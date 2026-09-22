@@ -1,4 +1,4 @@
-const CACHE_NAME = "armaxx-v1";
+const CACHE_NAME = "armaxx-v2";
 
 const urlsToCache = [
   "./",
