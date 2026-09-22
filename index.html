@@ -6,7 +6,7 @@
 
 <title>ARMAXX Assistant</title>
 
-manifest.json
+<link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#003366">
 
 <style>
@@ -20,12 +20,12 @@ body{
 header{
     background:#003366;
     color:white;
-    padding:20px;
     text-align:center;
+    padding:20px;
 }
 
 .container{
-    max-width:900px;
+    max-width:1000px;
     margin:auto;
     padding:15px;
 }
@@ -60,19 +60,33 @@ button{
     cursor:pointer;
 }
 
-button:hover{
-    background:#004a99;
-}
-
 .resultado{
     background:#eef6ff;
-    padding:15px;
     border-left:5px solid #003366;
+    padding:12px;
     border-radius:8px;
     margin-top:10px;
 }
 
-.footer{
+.esquema-item{
+    background:#eef6ff;
+    padding:10px;
+    margin:5px 0;
+    border-left:4px solid #003366;
+    border-radius:6px;
+    cursor:pointer;
+}
+
+.esquema-item:hover{
+    background:#d9ebff;
+}
+
+.historial-item{
+    padding:8px;
+    border-bottom:1px solid #ddd;
+}
+
+footer{
     text-align:center;
     color:#666;
     padding:20px;
@@ -119,240 +133,132 @@ placeholder="Ejemplo: SS9, WBF110, KA1"
 />
 
 <button onclick="buscarComponente()">
-Buscar
+Buscar componente
 </button>
 
 <div id="resultadoBusqueda"></div>
 
 </div>
 
+<div class="card">
+
+<h2>Buscar punto</h2>
+
+<input
+id="buscarPunto"
+placeholder="Ejemplo: 112B, LIM2, 119A"
+/>
+
+<button onclick="buscarPunto()">
+Buscar punto
+</button>
+
+<div id="resultadoPunto"></div>
+
 </div>
 
-<div class="footer">
-ARMAXX Assistant v1.0
+<div class="card">
+
+<h2>Esquema interactivo</h2>
+
+<div id="esquema"></div>
+
 </div>
+
+<div class="card">
+
+<h2>Historial</h2>
+
+<div id="historial"></div>
+
+<button onclick="borrarHistorial()">
+Borrar historial
+</button>
+
+</div>
+
+</div>
+
+<footer>
+ARMAXX Assistant v2.1
+</footer>
 
 <script>
 
 const tramos = [
 
-{
-entrada:"110B",
-salida:"111",
-elemento:"STOP MOTOR",
-componentes:["SS4","WEB93"]
-},
-
-{
-entrada:"111",
-salida:"112",
-elemento:"SELECTOR INSPECCION FOSO",
-componentes:["SIPS","HD3","HD4"]
-},
-
-{
-entrada:"112",
-salida:"112A",
-elemento:"STOP FOSO",
-componentes:["SS5"]
-},
-
-{
-entrada:"112A",
-salida:"112B",
-elemento:"POLEA TENSORA",
-componentes:["SS6","WBF32"]
-},
-
-{
-entrada:"112B",
-salida:"113",
-elemento:"ESCALERA + ARSIS",
-componentes:["SS7A","SS7B","XBF2A","XBF2B","WBF33","WBF34"]
-},
-
-{
-entrada:"113",
-salida:"114",
-elemento:"BUFFER CABINA 1",
-componentes:["SS8","WBF49"]
-},
-
-{
-entrada:"114",
-salida:"115",
-elemento:"BUFFER CONTRAPESO",
-componentes:["SS9","WBF110"]
-},
-
-{
-entrada:"115",
-salida:"116",
-elemento:"BUFFER CABINA 2",
-componentes:["SS10","WBF50"]
-},
-
-{
-entrada:"116",
-salida:"118",
-elemento:"LIMITADOR",
-componentes:["SS11","WDAC116","XEB5"]
-},
-
-{
-entrada:"118",
-salida:"LIM2",
-elemento:"ARSIS CABINA",
-componentes:["SC IN","SC OUT"]
-},
-
-{
-entrada:"LIM2",
-salida:"119A",
-elemento:"PARACAIDAS",
-componentes:["AUX1","AUX2","XDA18","XDA17","WDA43"]
-},
-
-{
-entrada:"119A",
-salida:"119B",
-elemento:"SEE NORMAL",
-componentes:["HF4"]
-},
-
-{
-entrada:"135",
-salida:"137",
-elemento:"CERRADURA CABINA A",
-componentes:["KA1","KA2","XDA20","WMAP45"]
-},
-
-{
-entrada:"137",
-salida:"140",
-elemento:"CERRADURA CABINA B",
-componentes:["KB1","KB2","XDA22","WMAP46"]
-}
+{entrada:"110B",salida:"111",elemento:"STOP MOTOR",componentes:["SS4","WEB93"]},
+{entrada:"111",salida:"112",elemento:"SELECTOR INSPECCION FOSO",componentes:["SIPS","HD3","HD4"]},
+{entrada:"112",salida:"112A",elemento:"STOP FOSO",componentes:["SS5"]},
+{entrada:"112A",salida:"112B",elemento:"POLEA TENSORA",componentes:["SS6","WBF32"]},
+{entrada:"112B",salida:"113",elemento:"ESCALERA + ARSIS",componentes:["SS7A","SS7B","XBF2A","XBF2B","WBF33","WBF34"]},
+{entrada:"113",salida:"114",elemento:"BUFFER CABINA 1",componentes:["SS8","WBF49"]},
+{entrada:"114",salida:"115",elemento:"BUFFER CONTRAPESO",componentes:["SS9","WBF110"]},
+{entrada:"115",salida:"116",elemento:"BUFFER CABINA 2",componentes:["SS10","WBF50"]},
+{entrada:"116",salida:"118",elemento:"LIMITADOR",componentes:["SS11","WDAC116","XEB5"]},
+{entrada:"118",salida:"LIM2",elemento:"ARSIS CABINA",componentes:["SC IN","SC OUT"]},
+{entrada:"LIM2",salida:"119A",elemento:"PARACAIDAS",componentes:["AUX1","AUX2","XDA18","XDA17","WDA43"]},
+{entrada:"119A",salida:"119B",elemento:"SEE NORMAL",componentes:["HF4"]},
+{entrada:"119B",salida:"STP1",elemento:"INSPECCION TECHO",componentes:["SICS"]},
+{entrada:"STP1",salida:"STP2",elemento:"TRAMPILLA Y AFLOJABLES",componentes:["SS16A","SS16B","SS16C","SS16D"]},
+{entrada:"120",salida:"130",elemento:"PRESENCIA PUERTAS",componentes:["PRESENCIA"]},
+{entrada:"130",salida:"133",elemento:"CERRADURAS EXTERIORES A",componentes:["A"]},
+{entrada:"133",salida:"135",elemento:"CERRADURAS EXTERIORES B",componentes:["B"]},
+{entrada:"135",salida:"137",elemento:"CERRADURA CABINA A",componentes:["KA1","KA2","XDA20","WMAP45"]},
+{entrada:"137",salida:"140",elemento:"CERRADURA CABINA B",componentes:["KB1","KB2","XDA22","WMAP46"]}
 
 ];
 
-const puntos = [];
+const puntos=[];
 
-tramos.forEach(t => {
+tramos.forEach(t=>{
 
-    if(!puntos.includes(t.entrada))
-        puntos.push(t.entrada);
+if(!puntos.includes(t.entrada))
+puntos.push(t.entrada);
 
-    if(!puntos.includes(t.salida))
-        puntos.push(t.salida);
+if(!puntos.includes(t.salida))
+puntos.push(t.salida);
 
 });
 
-const entrada = document.getElementById("entrada");
-const salida = document.getElementById("salida");
+const entrada=document.getElementById("entrada");
+const salida=document.getElementById("salida");
 
-puntos.forEach(p => {
+puntos.forEach(p=>{
 
-    entrada.innerHTML += `<option>${p}</option>`;
-    salida.innerHTML += `<option>${p}</option>`;
+entrada.innerHTML+=`<option>${p}</option>`;
+salida.innerHTML+=`<option>${p}</option>`;
 
 });
 
 function diagnosticar(){
 
-    const tramo = tramos.find(t =>
-        t.entrada === entrada.value &&
-        t.salida === salida.value
-    );
+const tramo=tramos.find(t=>
+t.entrada===entrada.value &&
+t.salida===salida.value
+);
 
-    if(!tramo){
+if(!tramo){
 
-        document.getElementById("resultado").innerHTML =
-        `<div class="resultado">
-            Tramo no encontrado
-        </div>`;
+resultado.innerHTML=
+'<div class="resultado">Tramo no encontrado</div>';
 
-        return;
-    }
-
-    document.getElementById("resultado").innerHTML =
-
-    `<div class="resultado">
-
-        <h3>${tramo.entrada} ➜ ${tramo.salida}</h3>
-
-        <b>Elemento:</b><br>
-        ${tramo.elemento}
-
-        <br><br>
-
-        <b>Revisar:</b><br>
-        ${tramo.componentes.join(", ")}
-
-    </div>`;
+return;
 
 }
 
-function buscarComponente(){
+resultado.innerHTML=
+`
+<div class="resultado">
 
-    const texto =
-    document.getElementById("buscar")
-    .value
-    .trim()
-    .toUpperCase();
+<h3>${tramo.entrada} ➜ ${tramo.salida}</h3>
 
-    const encontrados =
-    tramos.filter(t =>
-        t.componentes.includes(texto)
-    );
+<b>Elemento:</b><br>
+${tramo.elemento}
 
-    if(encontrados.length === 0){
+<br><br>
 
-        document.getElementById("resultadoBusqueda").innerHTML =
-        `<div class="resultado">
-            No encontrado
-        </div>`;
+<b>Revisar:</b><br>
+${tramo.componentes.join(", ")}
 
-        return;
-    }
-
-    let html = "";
-
-    encontrados.forEach(e => {
-
-        html +=
-
-        `<div class="resultado">
-
-            <b>${texto}</b>
-
-            <br><br>
-
-            ${e.entrada} ➜ ${e.salida}
-
-            <br><br>
-
-            ${e.elemento}
-
-        </div>`;
-
-    });
-
-    document.getElementById("resultadoBusqueda").innerHTML = html;
-
-}
-
-if('serviceWorker' in navigator){
-
-    window.addEventListener('load', () => {
-
-        navigator.serviceWorker.register('service-worker.js');
-
-    });
-
-}
-
-</script>
-
-</body>
-</html>
+</
