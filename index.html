@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>ARMAXX Assistant</title>
+
+manifest.json
+<meta name="theme-color" content="#003366">
+
+<style>
+
+body{
+    margin:0;
+    font-family:Arial,sans-serif;
+    background:#f4f6f9;
+}
+
+header{
+    background:#003366;
+    color:white;
+    padding:20px;
+    text-align:center;
+}
+
+.container{
+    max-width:900px;
+    margin:auto;
+    padding:15px;
+}
+
+.card{
+    background:white;
+    border-radius:12px;
+    padding:15px;
+    margin-bottom:15px;
+    box-shadow:0 2px 8px rgba(0,0,0,.15);
+}
+
+h2{
+    margin-top:0;
+}
+
+input,
+select,
+button{
+    width:100%;
+    padding:12px;
+    margin-top:8px;
+    margin-bottom:10px;
+    box-sizing:border-box;
+}
+
+button{
+    background:#003366;
+    color:white;
+    border:none;
+    border-radius:8px;
+    cursor:pointer;
+}
+
+button:hover{
+    background:#004a99;
+}
+
+.resultado{
+    background:#eef6ff;
+    padding:15px;
+    border-left:5px solid #003366;
+    border-radius:8px;
+    margin-top:10px;
+}
+
+.footer{
+    text-align:center;
+    color:#666;
+    padding:20px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+<h1>ARMAXX Assistant</h1>
+<p>Diagnóstico Serie de Seguridad</p>
+</header>
+
+<div class="container">
+
+<div class="card">
+
+<h2>Diagnóstico por tensión</h2>
+
+<label>Último punto con tensión</label>
+<select id="entrada"></select>
+
+<label>Primer punto sin tensión</label>
+<select id="salida"></select>
+
+<button onclick="diagnosticar()">
+Diagnosticar
+</button>
+
+<div id="resultado"></div>
+
+</div>
+
+<div class="card">
+
+<h2>Buscar componente</h2>
+
+<input
+id="buscar"
+placeholder="Ejemplo: SS9, WBF110, KA1"
+/>
+
+<button onclick="buscarComponente()">
+Buscar
+</button>
+
+<div id="resultadoBusqueda"></div>
+
+</div>
+
+</div>
+
+<div class="footer">
+ARMAXX Assistant v1.0
+</div>
+
+<script>
+
+const tramos = [
+
+{
+entrada:"110B",
+salida:"111",
+elemento:"STOP MOTOR",
+componentes:["SS4","WEB93"]
+},
+
+{
+entrada:"111",
+salida:"112",
+elemento:"SELECTOR INSPECCION FOSO",
+componentes:["SIPS","HD3","HD4"]
+},
+
+{
+entrada:"112",
+salida:"112A",
+elemento:"STOP FOSO",
+componentes:["SS5"]
+},
+
+{
+entrada:"112A",
+salida:"112B",
+elemento:"POLEA TENSORA",
+componentes:["SS6","WBF32"]
+},
+
+{
+entrada:"112B",
+salida:"113",
+elemento:"ESCALERA + ARSIS",
+componentes:["SS7A","SS7B","XBF2A","XBF2B","WBF33","WBF34"]
+},
+
+{
+entrada:"113",
+salida:"114",
+elemento:"BUFFER CABINA 1",
+componentes:["SS8","WBF49"]
+},
+
+{
+entrada:"114",
+salida:"115",
+elemento:"BUFFER CONTRAPESO",
+componentes:["SS9","WBF110"]
+},
+
+{
+entrada:"115",
+salida:"116",
+elemento:"BUFFER CABINA 2",
+componentes:["SS10","WBF50"]
+},
+
+{
+entrada:"116",
+salida:"118",
+elemento:"LIMITADOR",
+componentes:["SS11","WDAC116","XEB5"]
+},
+
+{
+entrada:"118",
+salida:"LIM2",
+elemento:"ARSIS CABINA",
+componentes:["SC IN","SC OUT"]
+},
+
+{
+entrada:"LIM2",
+salida:"119A",
+elemento:"PARACAIDAS",
+componentes:["AUX1","AUX2","XDA18","XDA17","WDA43"]
+},
+
+{
+entrada:"119A",
+salida:"119B",
+elemento:"SEE NORMAL",
+componentes:["HF4"]
+},
+
+{
+entrada:"135",
+salida:"137",
+elemento:"CERRADURA CABINA A",
+componentes:["KA1","KA2","XDA20","WMAP45"]
+},
+
+{
+entrada:"137",
+salida:"140",
+elemento:"CERRADURA CABINA B",
+componentes:["KB1","KB2","XDA22","WMAP46"]
+}
+
+];
+
+const puntos = [];
+
+tramos.forEach(t => {
+
+    if(!puntos.includes(t.entrada))
+        puntos.push(t.entrada);
+
+    if(!puntos.includes(t.salida))
+        puntos.push(t.salida);
+
+});
+
+const entrada = document.getElementById("entrada");
+const salida = document.getElementById("salida");
+
+puntos.forEach(p => {
+
+    entrada.innerHTML += `<option>${p}</option>`;
+    salida.innerHTML += `<option>${p}</option>`;
+
+});
+
+function diagnosticar(){
+
+    const tramo = tramos.find(t =>
+        t.entrada === entrada.value &&
+        t.salida === salida.value
+    );
+
+    if(!tramo){
+
+        document.getElementById("resultado").innerHTML =
+        `<div class="resultado">
+            Tramo no encontrado
+        </div>`;
+
+        return;
+    }
+
+    document.getElementById("resultado").innerHTML =
+
+    `<div class="resultado">
+
+        <h3>${tramo.entrada} ➜ ${tramo.salida}</h3>
+
+        <b>Elemento:</b><br>
+        ${tramo.elemento}
+
+        <br><br>
+
+        <b>Revisar:</b><br>
+        ${tramo.componentes.join(", ")}
+
+    </div>`;
+
+}
+
+function buscarComponente(){
+
+    const texto =
+    document.getElementById("buscar")
+    .value
+    .trim()
+    .toUpperCase();
+
+    const encontrados =
+    tramos.filter(t =>
+        t.componentes.includes(texto)
+    );
+
+    if(encontrados.length === 0){
+
+        document.getElementById("resultadoBusqueda").innerHTML =
+        `<div class="resultado">
+            No encontrado
+        </div>`;
+
+        return;
+    }
+
+    let html = "";
+
+    encontrados.forEach(e => {
+
+        html +=
+
+        `<div class="resultado">
+
+            <b>${texto}</b>
+
+            <br><br>
+
+            ${e.entrada} ➜ ${e.salida}
+
+            <br><br>
+
+            ${e.elemento}
+
+        </div>`;
+
+    });
+
+    document.getElementById("resultadoBusqueda").innerHTML = html;
+
+}
+
+if('serviceWorker' in navigator){
+
+    window.addEventListener('load', () => {
+
+        navigator.serviceWorker.register('service-worker.js');
+
+    });
+
+}
+
+</script>
+
+</body>
+</html>
